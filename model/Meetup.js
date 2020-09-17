@@ -16,10 +16,8 @@ const meetupSchema = new Schema({
     required: true,
   },
   attendees: {
-    type: {
-      type: [Array],
-      required: false,
-    },
+    type: Array,
+    required: false,
     username: {
       type: String,
       required: false,
@@ -28,6 +26,10 @@ const meetupSchema = new Schema({
   date: {
     type: Date,
     default: Date.now,
+  },
+  address: {
+    type: String,
+    required: true,
   },
   location: {
     //** USE GEOLOCATION ON FRONT END WHEN CREATING MEETUP **/
@@ -43,13 +45,19 @@ const meetupSchema = new Schema({
     },
   },
   reviews: {
-    type: {
-      type: Array,
-      required: false,
-    },
+    type: Array,
+    required: false,
     review: {
       type: Object,
       required: false,
+      username: {
+        type: String,
+        required: false,
+      },
+      text: {
+        type: String,
+        required: false,
+      },
     },
   },
 });

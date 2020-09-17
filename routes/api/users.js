@@ -15,6 +15,7 @@ router.post('/register', async (req, res) => {
   let { name, username, email, password, confirm_password } = req.body;
   if (password !== confirm_password) {
     return res.status(400).json({
+      success: false,
       msg: 'Password do not match.',
     });
   }
@@ -26,6 +27,7 @@ router.post('/register', async (req, res) => {
       return res
         .status(400)
         .jsonp({
+          success: false,
           msg: 'Username already exists.',
         })
         .end();
@@ -37,6 +39,7 @@ router.post('/register', async (req, res) => {
       return res
         .status(400)
         .jsonp({
+          success: false,
           msg: 'Email is already registered. Did you forget your password?',
         })
         .end();

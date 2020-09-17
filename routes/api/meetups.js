@@ -13,11 +13,21 @@ const Meetup = require('../../model/Meetup');
  */
 
 router.post('/register', async (req, res) => {
-  let { eventName, host, details, date, location } = req.body;
+  let {
+    eventName,
+    host,
+    details,
+    attendees,
+    date,
+    address,
+    location,
+    reviews,
+  } = req.body;
   // Check for the unique username
   await Meetup.findOne({ eventName: eventName }).then((meetup) => {
     if (meetup && !res.headersSent) {
       return res.status(400).json({
+        success: false,
         msg: 'Event already created.',
       });
     }
@@ -28,8 +38,11 @@ router.post('/register', async (req, res) => {
       eventName,
       host,
       details,
+      attendees,
       date,
+      address,
       location,
+      reviews,
     });
     newMeetup.save().then((meetup) => {
       return res.status(201).jsonp({
@@ -43,7 +56,7 @@ router.post('/register', async (req, res) => {
 router.get('/all', async (req, res) => {
   let allMeetups = [];
   await Meetup.find().then((meetup) => {
-    allMeetups.push(meetup);
+    allMeetups = meetup;
   });
   return res
     .status(200)
