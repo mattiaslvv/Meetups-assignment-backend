@@ -6,6 +6,7 @@ const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const path = require('path');
 const cors = require('cors');
+const passport = require('passport');
 
 // Initialize app
 const app = express();
@@ -24,6 +25,11 @@ app.use(cors());
 // TODO: check if this is needed. static path not necessary for this server.
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Use the passport middleware
+app.use(passport.initialize());
+// Bring in the strategy for our Passport
+require('./config/passport')(passport);
+
 // Bring in the Database config and connect with the MongoDB database
 const meetups_db = require('./config/keys').mongoURI;
 mongoose
@@ -35,11 +41,11 @@ mongoose
     console.log(`Unable to connect to the database ${err}`);
   });
 
-// app.get('/', (req, res) => {
-//   res.send('<h1>Connected to mongoose!</h1>');
-// });
 const users = require('./routes/api/users');
 app.use('/api/users', users);
+
+const meetups = require('./routes/api/meetups');
+app.use('/api/meetups', meetups);
 
 const PORT = process.env.PORT || 5000;
 

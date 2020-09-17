@@ -3,7 +3,7 @@ const Schema = mongoose.Schema;
 
 // Create a meetup schema
 const meetupSchema = new Schema({
-  name: {
+  eventName: {
     type: String,
     required: true,
   },
@@ -15,13 +15,15 @@ const meetupSchema = new Schema({
     type: String,
     required: true,
   },
-  location: {
-    type: String,
-    required: false,
-  },
   attendees: {
-    type: Array,
-    required: true,
+    type: {
+      type: [Array],
+      required: false,
+    },
+    username: {
+      type: String,
+      required: false,
+    },
   },
   date: {
     type: Date,
@@ -38,6 +40,16 @@ const meetupSchema = new Schema({
     coordinates: {
       type: [Number],
       required: true,
+    },
+  },
+  reviews: {
+    type: {
+      type: Array,
+      required: false,
+    },
+    review: {
+      type: Object,
+      required: false,
     },
   },
 });
