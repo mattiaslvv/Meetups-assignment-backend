@@ -67,4 +67,56 @@ router.get('/all', async (req, res) => {
     .end();
 });
 
+router.get('/my-meetups', async (req, res) => {
+  let hostedMeetups = [];
+  let { name } = req.body; //Hostname is sent with the get request
+  await Meetup.find({ host: name }).then((meetup) => {
+    hostedMeetups = meetup;
+  });
+  return res
+    .status(200)
+    .jsonp({
+      success: true,
+      meetups: hostedMeetups,
+    })
+    .end();
+});
+
+router.get('/reviews', async (req, res) => {
+  let reviewedMeetups = [];
+  let { username } = req.body; //Username is sent with the get request
+  await Meetup.find({ 'reviews.username': username }).then((meetup) => {
+    reviewedMeetups = meetup;
+  });
+  return res
+    .status(200)
+    .jsonp({
+      success: true,
+      meetups: reviewedMeetups,
+    })
+    .end();
+});
+
+//TODO: see if posting review works so it adds to exact meetups reviews.
+router.post('/review', async (req, res) => {
+  let reviewedMeetups = [];
+  let {
+    _id,
+    review: { username, text },
+  } = req.body; //Username and Text(review) is sent with the get request along with the _id of the meetup
+  await Meetup.findOneAndUpdate(
+    { _id: _id },
+    { $push: { reviews: review } }
+  ).then((meetup) => {
+    reviewedMeetups = meetup;
+  });
+  return res
+    .status(200)
+    .jsonp({
+      success: true,
+      meetups: reviewedMeetups,
+    })
+    .end();
+});
+
 module.exports = router;
