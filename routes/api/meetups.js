@@ -100,23 +100,39 @@ router.get('/reviews', async (req, res) => {
 //TODO: see if posting review works so it adds to exact meetups reviews.
 router.post('/review', async (req, res) => {
   let reviewedMeetups = [];
-  let {
-    _id,
-    review: { username, text },
-  } = req.body; //Username and Text(review) is sent with the get request along with the _id of the meetup
-  await Meetup.findOneAndUpdate(
-    { _id: _id },
-    { $push: { reviews: review } }
-  ).then((meetup) => {
-    reviewedMeetups = meetup;
-  });
-  return res
-    .status(200)
-    .jsonp({
-      success: true,
-      meetups: reviewedMeetups,
-    })
-    .end();
+  let _id = req.body._id;
+  let review = {};
+  review = { username: req.body.review.username, text: req.body.review.text };
+  // Check if review by that user already exists on the meetup
+  await Meetup.findOne({ _id: _id, 'reviews.username': review.username }).then(
+    (meetup) => {
+      if (meetup && !res.headersSent) {
+        return res
+          .status(400)
+          .jsonp({
+            success: false,
+            msg: 'You already have a review on this meetup',
+          })
+          .end();
+      }
+    }
+  );
+  //Username and Text(review) is sent with the get request along with the _id of the meetup
+  if (res.headersSent == false) {
+    await Meetup.findOneAndUpdate(
+      { _id: _id },
+      { $push: { reviews: review } }
+    ).then((meetup) => {
+      reviewedMeetups = meetup;
+    });
+    return res
+      .status(200)
+      .jsonp({
+        success: true,
+        meetups: reviewedMeetups,
+      })
+      .end();
+  }
 });
 
 module.exports = router;

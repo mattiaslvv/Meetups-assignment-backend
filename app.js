@@ -33,7 +33,11 @@ require('./config/passport')(passport);
 // Bring in the Database config and connect with the MongoDB database
 const meetups_db = require('./config/keys').mongoURI;
 mongoose
-  .connect(meetups_db, { useNewUrlParser: true, useUnifiedTopology: true })
+  .connect(meetups_db, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    useFindAndModify: false,
+  })
   .then(() => {
     console.log(`Database meetups_db connected successfully!`);
   })
