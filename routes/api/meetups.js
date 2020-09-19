@@ -97,12 +97,13 @@ router.get('/reviews', async (req, res) => {
     .end();
 });
 
-//TODO: see if posting review works so it adds to exact meetups reviews.
 router.post('/review', async (req, res) => {
   let reviewedMeetups = [];
   let _id = req.body._id;
-  let review = {};
-  review = { username: req.body.review.username, text: req.body.review.text };
+  let review = {
+    username: req.body.username,
+    text: req.body.text,
+  };
   // Check if review by that user already exists on the meetup
   await Meetup.findOne({ _id: _id, 'reviews.username': review.username }).then(
     (meetup) => {
@@ -130,6 +131,7 @@ router.post('/review', async (req, res) => {
       .jsonp({
         success: true,
         meetups: reviewedMeetups,
+        msg: 'Successfully reviewed meetup',
       })
       .end();
   }
