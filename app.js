@@ -51,6 +51,10 @@ app.use('/api/users', users);
 const meetups = require('./routes/api/meetups');
 app.use('/api/meetups', meetups);
 
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public/index.html'));
+});
+
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
