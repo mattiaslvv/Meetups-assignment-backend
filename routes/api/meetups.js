@@ -4,6 +4,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const passport = require('passport');
 const Meetup = require('../../model/Meetup');
+const User = require('../../model/User');
 
 /*
  * @route POST api/meetups/register
@@ -44,7 +45,13 @@ router.post('/register', async (req, res) => {
       location,
       reviews,
     });
+    console.log(host);
+    await User.findOneAndUpdate(
+      { name: host },
+      { $push: { createdMeetups: newMeetup } }
+    );
     newMeetup.save().then((meetup) => {
+      console.log(typeof meetup);
       return res.status(201).jsonp({
         success: true,
         msg: 'Meetup is now registered.',
@@ -98,15 +105,28 @@ router.get('/reviews', async (req, res) => {
 });
 
 router.post('/review', async (req, res) => {
-  let reviewedMeetups = [];
+  let reviewedMeetups;
   let _id = req.body._id;
   let review = {
     username: req.body.username,
     text: req.body.text,
   };
-  // Check if review by that user already exists on the meetup
-  await Meetup.findOne({ _id: _id, 'reviews.username': review.username }).then(
-    (meetup) => {
+  if (review.text == '' || review.text == null) {
+    return res
+      .status(400)
+      .jsonp({
+        success: false,
+        msg:
+          'Your review was empty. Make sure to type your review before sending it.',
+      })
+      .end();
+  }
+  if (res.headersSent == false) {
+    // Check if review by that user already exists on the meetup
+    await Meetup.findOne({
+      _id: _id,
+      'reviews.username': review.username,
+    }).then((meetup) => {
       if (meetup && !res.headersSent) {
         return res
           .status(400)
@@ -116,8 +136,8 @@ router.post('/review', async (req, res) => {
           })
           .end();
       }
-    }
-  );
+    });
+  }
   //Username and Text(review) is sent with the get request along with the _id of the meetup
   if (res.headersSent == false) {
     await Meetup.findOneAndUpdate(
@@ -126,12 +146,180 @@ router.post('/review', async (req, res) => {
     ).then((meetup) => {
       reviewedMeetups = meetup;
     });
+    await User.findOneAndUpdate(
+      { username: review.username },
+      {
+        $push: {
+          reviewHistory: {
+            _id: _id,
+            meetupName: reviewedMeetups.eventName,
+            review: review.text,
+          },
+        },
+      }
+    );
     return res
       .status(200)
       .jsonp({
         success: true,
         meetups: reviewedMeetups,
         msg: 'Successfully reviewed meetup',
+      })
+      .end();
+  }
+});
+
+router.put('/review', async (req, res) => {
+  let reviewedMeetup;
+  let _id = req.body._id;
+  let review = {
+    username: req.body.username,
+    text: '',
+  };
+  await Meetup.findOne({ _id: _id })
+    .then((meetup) => {
+      reviewedMeetup = meetup;
+      let foundReview = meetup.reviews.find(
+        (item) => item.username == review.username
+      );
+      review.text = foundReview.text;
+    })
+    .catch((err) => {
+      console.log(err);
+    });
+  //Username and Text(review) is sent with the put request along with the _id of the meetup
+  await Meetup.findOneAndUpdate({ _id: _id }, { $pull: { reviews: review } });
+  await User.findOneAndUpdate(
+    { username: review.username },
+    {
+      $pull: {
+        reviewHistory: {
+          _id: _id,
+          meetupName: reviewedMeetup.eventName,
+          review: review.text,
+        },
+      },
+    }
+  ).catch((err) => {
+    console.log(err);
+  });
+  return res
+    .status(200)
+    .jsonp({
+      success: true,
+      meetups: reviewedMeetup,
+      msg: 'Successfully removed review from meetup.',
+    })
+    .end();
+});
+
+router.post('/meetup', async (req, res) => {
+  let filteredMeetup = [];
+  let { id } = req.body; //ID is sent with the get request
+  await Meetup.findOne({ _id: id })
+    .then((meetup) => {
+      filteredMeetup = meetup;
+    })
+    .catch((err) => {
+      return res
+        .status(400)
+        .jsonp({
+          success: false,
+          msg: err,
+        })
+        .end();
+    });
+  if (filteredMeetup == null && res.headersSent == false) {
+    return res
+      .status(400)
+      .jsonp({
+        success: false,
+        msg: 'Meetup not found',
+      })
+      .end();
+  }
+  if (filteredMeetup !== null && res.headersSent == false) {
+    return res
+      .status(200)
+      .jsonp({
+        success: true,
+        meetups: filteredMeetup,
+      })
+      .end();
+  }
+});
+
+router.post('/attend', async (req, res) => {
+  let { name, id } = req.body; //Name of the user and id of meetup is sent with the api request
+  let attendedMeetup = [];
+  await Meetup.findOneAndUpdate({ _id: id }, { $push: { attendees: name } })
+    .then((meetup) => {
+      attendedMeetup = meetup;
+    })
+    .catch((err) => {
+      return res
+        .status(400)
+        .jsonp({
+          success: false,
+          msg: err,
+        })
+        .end();
+    });
+  if (res.headersSent == false && attendedMeetup != null) {
+    await User.findOneAndUpdate(
+      { name: name },
+      {
+        $push: {
+          attendingMeetups: {
+            meetupName: attendedMeetup.eventName,
+            _id: id,
+          },
+        },
+      }
+    );
+    return res
+      .status(200)
+      .jsonp({
+        success: true,
+        msg: 'You have successfully signed up to attend this meetup.',
+      })
+      .end();
+  }
+});
+
+router.put('/attend', async (req, res) => {
+  let { name, id } = req.body; //Name of the user and id of meetup is sent with the api request
+  let attendedMeetup = [];
+  await Meetup.findOneAndUpdate({ _id: id }, { $pull: { attendees: name } })
+    .then((meetup) => {
+      attendedMeetup = meetup;
+    })
+    .catch((err) => {
+      return res
+        .status(400)
+        .jsonp({
+          success: false,
+          msg: err,
+        })
+        .end();
+    });
+  if (res.headersSent == false && attendedMeetup != null) {
+    await User.findOneAndUpdate(
+      { name: name },
+      {
+        $pull: {
+          attendingMeetups: {
+            meetupName: attendedMeetup.eventName,
+            _id: id,
+          },
+        },
+      }
+    );
+    return res
+      .status(200)
+      .jsonp({
+        success: true,
+        msg: 'You are no longer attending this Meetup',
       })
       .end();
   }

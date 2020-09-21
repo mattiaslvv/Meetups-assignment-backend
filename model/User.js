@@ -24,8 +24,40 @@ const UserSchema = new Schema({
     default: Date.now,
   },
   createdMeetups: {
-    type: [String],
+    type: Array,
     required: false,
+    meetup: {
+      type: Object,
+      required: false,
+    },
+  },
+  attendingMeetups: {
+    type: Array,
+    required: false,
+    meetupName: {
+      type: String,
+      required: false,
+    },
+    _id: {
+      type: String,
+      required: false,
+    },
+  },
+  reviewHistory: {
+    type: Array,
+    required: false,
+    _id: {
+      type: String,
+      required: false,
+    },
+    meetupName: {
+      type: String,
+      required: false,
+    },
+    review: {
+      type: String,
+      required: false,
+    },
   },
 });
 
