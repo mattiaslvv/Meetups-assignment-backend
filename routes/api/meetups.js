@@ -19,6 +19,7 @@ router.post('/register', async (req, res) => {
     host,
     details,
     attendees,
+    time,
     date,
     address,
     location,
@@ -40,20 +41,20 @@ router.post('/register', async (req, res) => {
       host,
       details,
       attendees,
+      time,
       date,
       address,
       location,
       reviews,
     });
-    console.log(host);
     await User.findOneAndUpdate(
       { name: host },
       { $push: { createdMeetups: newMeetup } }
     );
     newMeetup.save().then((meetup) => {
-      console.log(typeof meetup);
       return res.status(201).jsonp({
         success: true,
+        meetup: meetup,
         msg: 'Meetup is now registered.',
       });
     });
