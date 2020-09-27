@@ -326,4 +326,70 @@ router.put('/attend', async (req, res) => {
   }
 });
 
+router.put('/meetup/remove', async (req, res) => {
+  let id = req.body.id;
+  let userId = req.body.userId; //Id of meetup as well as userId is sent with the api request
+  let deletedMeetup;
+  await Meetup.findOneAndDelete({ _id: id })
+    .then((meetup) => {
+      deletedMeetup = meetup;
+    })
+    .catch((err) => {
+      console.log(err);
+      return res
+        .status(400)
+        .jsonp({
+          success: false,
+          msg: err,
+        })
+        .end();
+    });
+
+  if (res.headersSent == false && deletedMeetup != null) {
+    await User.findOneAndUpdate(
+      { _id: userId },
+      {
+        $pull: {
+          createdMeetups: {
+            _id: deletedMeetup._id,
+          },
+        },
+      }
+    ).catch((err) => {
+      console.log(err);
+    });
+    await User.findOneAndUpdate(
+      { _id: userId },
+      {
+        $pull: {
+          attendingMeetups: {
+            _id: id,
+          },
+        },
+      }
+    ).catch((err) => {
+      console.log(err);
+    });
+    await User.findOneAndUpdate(
+      { _id: userId },
+      {
+        $pull: {
+          reviewHistory: {
+            _id: id,
+          },
+        },
+      }
+    ).catch((err) => {
+      console.log(err);
+    });
+    return res
+      .status(200)
+      .jsonp({
+        success: true,
+        msg: 'Successfully removed Meetup',
+      })
+      .end();
+  }
+});
+
 module.exports = router;

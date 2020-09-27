@@ -29,7 +29,7 @@ const meetupSchema = new Schema({
   },
   time: {
     type: String,
-    required: true,
+    required: false,
   },
   address: {
     type: String,
