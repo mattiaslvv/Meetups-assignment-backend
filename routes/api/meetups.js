@@ -393,8 +393,7 @@ router.put('/meetup/remove', async (req, res) => {
 });
 
 router.get('/api', (req, res) => {
-  let token =
-    'pk.eyJ1IjoibWF0dGlhc2x2diIsImEiOiJja2ZkcWJ3Y2cwMXM4MnJtaGdxN29uam81In0.K5fCogu6ovDEuq03-3MTUQ';
+  let token = process.env.MAPBOX_API;
   return res
     .jsonp({
       token: token,
