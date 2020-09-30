@@ -5,6 +5,7 @@ const jwt = require('jsonwebtoken');
 const passport = require('passport');
 const Meetup = require('../../model/Meetup');
 const User = require('../../model/User');
+require('dotenv').config();
 
 /*
  * @route POST api/meetups/register
